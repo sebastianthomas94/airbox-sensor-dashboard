@@ -46,7 +46,7 @@ export async function fetchAndSaveAirboxData(): Promise<void> {
                 return mapped;
             })
             // Keep only entries that have required fields: mac and time
-            .filter((entry) => {
+            .filter((entry: AirBoxEntryEntity) => {
                 const ok = !!entry.mac && entry.time instanceof Date && !isNaN(entry.time.getTime());
                 if (!ok) {
                     console.warn("Skipping entry missing required fields (mac/time):", entry);
