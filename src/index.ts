@@ -6,6 +6,8 @@ import { airboxRepository } from './repositories/airbox.repository';
 import { fetchAndSaveAirboxData } from './services/airbox-fetch.service';
 import { notificationRouter } from './routes/notification.routes';
 import { checkThresholdsAndAlert } from './services/notification.service';
+import { dataRouter } from './routes/data.routes';
+import { intervalRouter } from './routes/interval.routes';
 
 let interval = envConfig.fetchIntervalMinutes; // minutes
 const app = express();
@@ -13,34 +15,18 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/get-data', async (req, res) => {
-    try {
-        const data = await airboxRepository.findAll();
-        res.json(data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-});
+// Mount routers
+app.use('/', dataRouter);
 
-app.get('/fetch-data', async (req, res) => {
-    try {
-        await fetchAndSaveAirboxData();
-        res.json({
-            message: "Data fetched and saved successfully",
-            intervalMinutes: envConfig.fetchIntervalMinutes
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch and save data" });
-    }
-});
+// Interval router (we'll handle the actual interval change below when mounted)
+app.use('/', intervalRouter);
 
+// Ensure interval change actually updates our runtime interval and reschedules
 app.post('/interval:set', (req, res) => {
     const { intervalMinutes } = req.body;
     if (typeof intervalMinutes === 'number' && intervalMinutes > 0) {
         interval = intervalMinutes;
         console.log(`Fetch interval updated to ${interval} minutes`);
-        // Reschedule the next run using the new interval
         scheduleNextFetch();
         res.json({ message: `Fetch interval updated to ${interval} minutes` });
     } else {

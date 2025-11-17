@@ -1,8 +1,6 @@
-import { Resend } from 'resend';
 import { envConfig } from '../config/env.config';
 import { airboxRepository } from '../repositories/airbox.repository';
-
-const resend = new Resend(envConfig.resendApiKey);
+import { resend } from '../config/resend.config';
 
 export type NotificationThresholds = {
     humidity?: number;
