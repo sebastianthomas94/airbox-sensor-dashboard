@@ -1,513 +1,595 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AirBox Sensor Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
 
-        header {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+      header {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
 
-        h1 {
-            color: #667eea;
-            font-size: 2em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      h1 {
+        color: #667eea;
+        font-size: 2em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9em;
-            color: #666;
-        }
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9em;
+        color: #666;
+      }
 
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #4caf50;
-            animation: pulse 2s infinite;
-        }
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #4caf50;
+        animation: pulse 2s infinite;
+      }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
         }
+        50% {
+          opacity: 0.5;
+        }
+      }
 
-        .last-update {
-            font-size: 0.85em;
-            color: #888;
+      .last-update {
+        font-size: 0.85em;
+        color: #888;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+      }
+
+      .summary-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .summary-card h3 {
+        font-size: 0.9em;
+        color: #888;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .summary-card .value {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .summary-card .unit {
+        font-size: 0.8em;
+        color: #999;
+        margin-top: 5px;
+      }
+
+      .sensor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      .sensor-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .sensor-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .sensor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .sensor-name {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .sensor-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .status-online {
+        background: #e8f5e9;
+        color: #4caf50;
+      }
+
+      .status-offline {
+        background: #ffebee;
+        color: #f44336;
+      }
+
+      .sensor-meta {
+        font-size: 0.85em;
+        color: #888;
+        margin-bottom: 15px;
+      }
+
+      .sensor-meta div {
+        margin: 3px 0;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .metric {
+        padding: 12px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+      }
+
+      .metric:hover {
+        background: #e9ecef;
+      }
+
+      .metric-label {
+        font-size: 0.8em;
+        color: #666;
+        margin-bottom: 5px;
+        font-weight: 600;
+      }
+
+      .metric-value {
+        font-size: 1.4em;
+        font-weight: bold;
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+      }
+
+      .metric-unit {
+        font-size: 0.6em;
+        color: #999;
+        font-weight: normal;
+      }
+
+      /* Air Quality Color Coding */
+      .aqi-good {
+        color: #4caf50;
+      }
+      .aqi-moderate {
+        color: #ff9800;
+      }
+      .aqi-unhealthy {
+        color: #f44336;
+      }
+      .aqi-hazardous {
+        color: #9c27b0;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        background: #ffebee;
+        color: #c62828;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .chart-container {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+      }
+
+      .chart-container h2 {
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 1.3em;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+        margin-bottom: 15px;
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      @media (max-width: 768px) {
+        .sensor-grid {
+          grid-template-columns: 1fr;
         }
 
         .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .summary-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .summary-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .summary-card h3 {
-            font-size: 0.9em;
-            color: #888;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .summary-card .value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .summary-card .unit {
-            font-size: 0.8em;
-            color: #999;
-            margin-top: 5px;
-        }
-
-        .sensor-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .sensor-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .sensor-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .sensor-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .sensor-name {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .sensor-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .status-online {
-            background: #e8f5e9;
-            color: #4caf50;
-        }
-
-        .status-offline {
-            background: #ffebee;
-            color: #f44336;
-        }
-
-        .sensor-meta {
-            font-size: 0.85em;
-            color: #888;
-            margin-bottom: 15px;
-        }
-
-        .sensor-meta div {
-            margin: 3px 0;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .metric {
-            padding: 12px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            transition: all 0.2s ease;
-        }
-
-        .metric:hover {
-            background: #e9ecef;
-        }
-
-        .metric-label {
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .metric-value {
-            font-size: 1.4em;
-            font-weight: bold;
-            display: flex;
-            align-items: baseline;
-            gap: 5px;
-        }
-
-        .metric-unit {
-            font-size: 0.6em;
-            color: #999;
-            font-weight: normal;
-        }
-
-        /* Air Quality Color Coding */
-        .aqi-good { color: #4caf50; }
-        .aqi-moderate { color: #ff9800; }
-        .aqi-unhealthy { color: #f44336; }
-        .aqi-hazardous { color: #9c27b0; }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-
-        .chart-container h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-            margin-bottom: 15px;
+          grid-template-columns: 1fr;
         }
 
         .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
+          grid-template-columns: 1fr;
         }
 
-        @media (max-width: 768px) {
-            .sensor-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-
-            h1 {
-                font-size: 1.5em;
-            }
-
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chart-wrapper {
-                height: 250px;
-            }
+        h1 {
+          font-size: 1.5em;
         }
 
-        .refresh-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .metrics-grid {
+          grid-template-columns: 1fr;
         }
 
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.2s ease;
+        .chart-wrapper {
+          height: 250px;
         }
+      }
 
-        .btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-        }
+      .refresh-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
 
-        .interval-display {
-            font-size: 0.85em;
-            color: #666;
-            padding: 8px 12px;
-            background: #f0f0f0;
-            border-radius: 6px;
-        }
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #667eea;
+        color: white;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.2s ease;
+      }
+
+      .btn:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+      }
+
+      .interval-display {
+        font-size: 0.85em;
+        color: #666;
+        padding: 8px 12px;
+        background: #f0f0f0;
+        border-radius: 6px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <div>
-                <h1>
-                    <span>🌡️</span>
-                    AirBox Sensor Dashboard
-                </h1>
-                <div class="last-update" id="lastUpdate">Loading...</div>
-            </div>
-            <div class="refresh-controls">
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    <span>Live Updates</span>
-                </div>
-                <div class="interval-display">
-                    Updates every <strong>60s</strong>
-                </div>
+      <header>
+        <div>
+          <h1>
+            <span>🌡️</span>
+            AirBox Sensor Dashboard
+          </h1>
+          <div class="last-update" id="lastUpdate">Loading...</div>
+        </div>
+        <div class="refresh-controls">
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>Live Updates</span>
+          </div>
+          <div class="interval-display">Updates every <strong>60s</strong></div>
 
-                <!-- Notification threshold inputs -->
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                    <input id="notifyEmail" type="email" placeholder="Alert Email" class="btn-input" style="width:180px;padding:6px;border-radius:6px;border:1px solid #ddd" />
-                    <input id="notifyHum" type="number" placeholder="Humidity (%)" class="btn-input" style="width:130px;padding:6px;border-radius:6px;border:1px solid #ddd" />
-                    <input id="notifyTemp" type="number" placeholder="Temperature (°C)" class="btn-input" style="width:150px;padding:6px;border-radius:6px;border:1px solid #ddd" />
-                    <input id="notifyPm25" type="number" placeholder="PM2.5 (μg/m³)" class="btn-input" style="width:130px;padding:6px;border-radius:6px;border:1px solid #ddd" />
-                    <button class="btn" onclick="submitNotificationValues()">Set Alerts</button>
-                </div>
+          <!-- Notification threshold inputs -->
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              flex-wrap: wrap;
+            "
+          >
+            <input
+              id="notifyEmail"
+              type="email"
+              placeholder="Alert Email"
+              class="btn-input"
+              style="
+                width: 180px;
+                padding: 6px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+              "
+            />
+            <input
+              id="notifyHum"
+              type="number"
+              placeholder="Humidity (%)"
+              class="btn-input"
+              style="
+                width: 130px;
+                padding: 6px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+              "
+            />
+            <input
+              id="notifyTemp"
+              type="number"
+              placeholder="Temperature (°C)"
+              class="btn-input"
+              style="
+                width: 150px;
+                padding: 6px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+              "
+            />
+            <input
+              id="notifyPm25"
+              type="number"
+              placeholder="PM2.5 (μg/m³)"
+              class="btn-input"
+              style="
+                width: 130px;
+                padding: 6px;
+                border-radius: 6px;
+                border: 1px solid #ddd;
+              "
+            />
+            <button class="btn" onclick="submitNotificationValues()">
+              Set Alerts
+            </button>
+          </div>
 
-                <div id="notifMessage" style="margin-left:10px;font-size:0.9em;color:#333;min-width:180px"></div>
+          <div
+            id="notifMessage"
+            style="
+              margin-left: 10px;
+              font-size: 0.9em;
+              color: #333;
+              min-width: 180px;
+            "
+          ></div>
 
-                <button class="btn" onclick="refreshData()">Refresh Now</button>
-            </div>
-        </header>
+          <button class="btn" onclick="refreshData()">Refresh Now</button>
+        </div>
+      </header>
 
-        <div class="summary-grid" id="summaryGrid">
-            <!-- Summary cards will be inserted here -->
+      <div class="summary-grid" id="summaryGrid">
+        <!-- Summary cards will be inserted here -->
+      </div>
+
+      <div class="charts-grid" id="chartsGrid">
+        <div class="chart-container">
+          <h2>📊 PM2.5 Trend (Last 24 Hours)</h2>
+          <div class="chart-wrapper">
+            <canvas id="pm25Chart"></canvas>
+          </div>
         </div>
 
-        <div class="charts-grid" id="chartsGrid">
-            <div class="chart-container">
-                <h2>📊 PM2.5 Trend (Last 24 Hours)</h2>
-                <div class="chart-wrapper">
-                    <canvas id="pm25Chart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h2>🌡️ Temperature & Humidity</h2>
-                <div class="chart-wrapper">
-                    <canvas id="tempHumidityChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h2>💨 Air Quality Metrics</h2>
-                <div class="chart-wrapper">
-                    <canvas id="airQualityChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <h2>🧪 Gas Concentrations</h2>
-                <div class="chart-wrapper">
-                    <canvas id="gasChart"></canvas>
-                </div>
-            </div>
+        <div class="chart-container">
+          <h2>🌡️ Temperature & Humidity</h2>
+          <div class="chart-wrapper">
+            <canvas id="tempHumidityChart"></canvas>
+          </div>
         </div>
 
-        <div id="loadingIndicator" class="loading">
-            <div class="loading-spinner"></div>
-            <p>Loading sensor data...</p>
+        <div class="chart-container">
+          <h2>💨 Air Quality Metrics</h2>
+          <div class="chart-wrapper">
+            <canvas id="airQualityChart"></canvas>
+          </div>
         </div>
 
-        <div id="errorContainer"></div>
-
-        <div class="sensor-grid" id="sensorGrid">
-            <!-- Sensor cards will be inserted here -->
+        <div class="chart-container">
+          <h2>🧪 Gas Concentrations</h2>
+          <div class="chart-wrapper">
+            <canvas id="gasChart"></canvas>
+          </div>
         </div>
+      </div>
+
+      <div id="loadingIndicator" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading sensor data...</p>
+      </div>
+
+      <div id="errorContainer"></div>
+
+      <div class="sensor-grid" id="sensorGrid">
+        <!-- Sensor cards will be inserted here -->
+      </div>
     </div>
 
     <script>
-        let updateInterval = null;
-        // Determine API base URL from current page location.
-        // If the page is served from localhost (or 127.0.0.1) and no port is present,
-        // assume the backend runs on port 5000. If the page is opened via file:// or
-        // window.location is unavailable, fall back to http://localhost:5000.
-        const API_BASE_URL = (() => {
-            try {
-                if (typeof window === 'undefined' || !window.location) return 'http://localhost:5000';
-                const { protocol, hostname, port } = window.location;
+      let updateInterval = null;
+      // Determine API base URL from current page location.
+      // If the page is served from localhost (or 127.0.0.1) and no port is present,
+      // assume the backend runs on port 5000. If the page is opened via file:// or
+      // window.location is unavailable, fall back to http://localhost:5000.
+      const API_BASE_URL = (() => {
+        try {
+          if (typeof window === "undefined" || !window.location)
+            return "http://localhost:5000";
+          const { protocol, hostname, port } = window.location;
 
-                if (protocol === 'file:') return 'http://localhost:5000';
+          if (protocol === "file:") return "http://localhost:5000";
 
-                if ((hostname === 'localhost' || hostname === '127.0.0.1') && !port) {
-                    return `${protocol}//${hostname}:5000`;
-                }
+          if ((hostname === "localhost" || hostname === "127.0.0.1") && !port) {
+            return `${protocol}//${hostname}:5000`;
+          }
 
-                return window.location.origin;
-            } catch (e) {
-                return 'http://localhost:5000';
-            }
-        })();
-        const UPDATE_INTERVAL_MS = 60000; // 1 minute
+          return window.location.origin;
+        } catch (e) {
+          // Any unexpected error: revert to sensible default
+          return "http://localhost:5000";
+        }
+      })();
+      const UPDATE_INTERVAL_MS = 60000; // 1 minute
 
-        // Chart instances
-        let pm25Chart = null;
-        let tempHumidityChart = null;
-        let airQualityChart = null;
-        let gasChart = null;
+      // Chart instances
+      let pm25Chart = null;
+      let tempHumidityChart = null;
+      let airQualityChart = null;
+      let gasChart = null;
 
-        // Chart.js default configuration
-        Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-        Chart.defaults.color = '#666';
+      // Chart.js default configuration
+      Chart.defaults.font.family =
+        "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+      Chart.defaults.color = "#666";
 
-        function getAQIClass(pm25) {
-            if (pm25 <= 12) return 'aqi-good';
-            if (pm25 <= 35.4) return 'aqi-moderate';
-            if (pm25 <= 55.4) return 'aqi-unhealthy';
-            return 'aqi-hazardous';
+      function getAQIClass(pm25) {
+        if (pm25 <= 12) return "aqi-good";
+        if (pm25 <= 35.4) return "aqi-moderate";
+        if (pm25 <= 55.4) return "aqi-unhealthy";
+        return "aqi-hazardous";
+      }
+
+      function getAQILabel(pm25) {
+        if (pm25 <= 12) return "Good";
+        if (pm25 <= 35.4) return "Moderate";
+        if (pm25 <= 55.4) return "Unhealthy";
+        return "Hazardous";
+      }
+
+      function formatDate(dateString) {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        return date.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function calculateAverages(data) {
+        if (!data || data.length === 0) return null;
+
+        const totals = data.reduce(
+          (acc, entry) => {
+            acc.pm25 += entry.pm25 || 0;
+            acc.pm10 += entry.pm10 || 0;
+            acc.temp += entry.t || 0;
+            acc.humidity += entry.h || 0;
+            acc.co2 += entry.co2 || 0;
+            return acc;
+          },
+          { pm25: 0, pm10: 0, temp: 0, humidity: 0, co2: 0 }
+        );
+
+        const count = data.length;
+        return {
+          pm25: (totals.pm25 / count).toFixed(1),
+          pm10: (totals.pm10 / count).toFixed(1),
+          temp: (totals.temp / count).toFixed(1),
+          humidity: (totals.humidity / count).toFixed(1),
+          co2: (totals.co2 / count).toFixed(0),
+        };
+      }
+
+      function renderSummaryCards(data) {
+        const summaryGrid = document.getElementById("summaryGrid");
+        const averages = calculateAverages(data);
+        const onlineCount = data.filter((d) => d.status === "online").length;
+
+        if (!averages) {
+          summaryGrid.innerHTML = "";
+          return;
         }
 
-        function getAQILabel(pm25) {
-            if (pm25 <= 12) return 'Good';
-            if (pm25 <= 35.4) return 'Moderate';
-            if (pm25 <= 55.4) return 'Unhealthy';
-            return 'Hazardous';
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric',
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
-
-        function calculateAverages(data) {
-            if (!data || data.length === 0) return null;
-
-            const totals = data.reduce((acc, entry) => {
-                acc.pm25 += entry.pm25 || 0;
-                acc.pm10 += entry.pm10 || 0;
-                acc.temp += entry.t || 0;
-                acc.humidity += entry.h || 0;
-                acc.co2 += entry.co2 || 0;
-                return acc;
-            }, { pm25: 0, pm10: 0, temp: 0, humidity: 0, co2: 0 });
-
-            const count = data.length;
-            return {
-                pm25: (totals.pm25 / count).toFixed(1),
-                pm10: (totals.pm10 / count).toFixed(1),
-                temp: (totals.temp / count).toFixed(1),
-                humidity: (totals.humidity / count).toFixed(1),
-                co2: (totals.co2 / count).toFixed(0)
-            };
-        }
-
-        function renderSummaryCards(data) {
-            const summaryGrid = document.getElementById('summaryGrid');
-            const averages = calculateAverages(data);
-            const onlineCount = data.filter(d => d.status === 'online').length;
-
-            if (!averages) {
-                summaryGrid.innerHTML = '';
-                return;
-            }
-
-            summaryGrid.innerHTML = `
+        summaryGrid.innerHTML = `
                 <div class="summary-card">
                     <h3>Active Sensors</h3>
                     <div class="value">${onlineCount}/${data.length}</div>
@@ -515,13 +597,20 @@
                 </div>
                 <div class="summary-card">
                     <h3>Avg PM2.5</h3>
-                    <div class="value ${getAQIClass(parseFloat(averages.pm25))}">${averages.pm25}</div>
-                    <div class="unit">μg/m³ - ${getAQILabel(parseFloat(averages.pm25))}</div>
+                    <div class="value ${getAQIClass(
+                      parseFloat(averages.pm25)
+                    )}">${averages.pm25}</div>
+                    <div class="unit">μg/m³ - ${getAQILabel(
+                      parseFloat(averages.pm25)
+                    )}</div>
                 </div>
                 <div class="summary-card">
                     <h3>Avg Temperature</h3>
                     <div class="value">${averages.temp}°C</div>
-                    <div class="unit">${(parseFloat(averages.temp) * 9/5 + 32).toFixed(1)}°F</div>
+                    <div class="unit">${(
+                      (parseFloat(averages.temp) * 9) / 5 +
+                      32
+                    ).toFixed(1)}°F</div>
                 </div>
                 <div class="summary-card">
                     <h3>Avg Humidity</h3>
@@ -529,25 +618,36 @@
                     <div class="unit">relative humidity</div>
                 </div>
             `;
-        }
+      }
 
-        function renderSensorCard(sensor) {
-            const aqiClass = getAQIClass(sensor.pm25);
-            const aqiLabel = getAQILabel(sensor.pm25);
-            const statusClass = sensor.status === 'online' ? 'status-online' : 'status-offline';
+      function renderSensorCard(sensor) {
+        const aqiClass = getAQIClass(sensor.pm25);
+        const aqiLabel = getAQILabel(sensor.pm25);
+        const statusClass =
+          sensor.status === "online" ? "status-online" : "status-offline";
 
-            return `
+        return `
                 <div class="sensor-card">
                     <div class="sensor-header">
-                        <div class="sensor-name">${sensor.name || 'Unknown Sensor'}</div>
-                        <div class="sensor-status ${statusClass}">${sensor.status || 'unknown'}</div>
+                        <div class="sensor-name">${
+                          sensor.name || "Unknown Sensor"
+                        }</div>
+                        <div class="sensor-status ${statusClass}">${
+          sensor.status || "unknown"
+        }</div>
                     </div>
                     
                     <div class="sensor-meta">
                         <div><strong>MAC:</strong> ${sensor.mac}</div>
-                        <div><strong>Location:</strong> ${sensor.lat?.toFixed(4)}, ${sensor.lon?.toFixed(4)}</div>
-                        <div><strong>Last Update:</strong> ${formatDate(sensor.time)}</div>
-                        <div><strong>Model:</strong> ${sensor.model || 'N/A'} | <strong>FW:</strong> ${sensor.fw_ver || 'N/A'}</div>
+                        <div><strong>Location:</strong> ${sensor.lat?.toFixed(
+                          4
+                        )}, ${sensor.lon?.toFixed(4)}</div>
+                        <div><strong>Last Update:</strong> ${formatDate(
+                          sensor.time
+                        )}</div>
+                        <div><strong>Model:</strong> ${
+                          sensor.model || "N/A"
+                        } | <strong>FW:</strong> ${sensor.fw_ver || "N/A"}</div>
                     </div>
 
                     <div class="metrics-grid">
@@ -618,521 +718,555 @@
                     </div>
                 </div>
             `;
-        }
+      }
 
-        async function fetchData() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/get-data`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                throw error;
-            }
+      async function fetchData() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/get-data`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          throw error;
         }
+      }
 
-        function showError(message) {
-            const errorContainer = document.getElementById('errorContainer');
-            errorContainer.innerHTML = `
+      function showError(message) {
+        const errorContainer = document.getElementById("errorContainer");
+        errorContainer.innerHTML = `
                 <div class="error">
                     <strong>⚠️ Error:</strong> ${message}
                 </div>
             `;
+      }
+
+      function clearError() {
+        document.getElementById("errorContainer").innerHTML = "";
+      }
+
+      // --- Notification threshold submission ---
+      async function loadCurrentThresholds() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/set-notification-values`);
+          if (res.ok) {
+            const data = await res.json();
+            const thresholds = data.thresholds || {};
+
+            // Populate inputs with current values
+            if (thresholds.email)
+              document.getElementById("notifyEmail").value = thresholds.email;
+            if (thresholds.humidity !== undefined)
+              document.getElementById("notifyHum").value = thresholds.humidity;
+            if (thresholds.temperature !== undefined)
+              document.getElementById("notifyTemp").value =
+                thresholds.temperature;
+            if (thresholds.pm25 !== undefined)
+              document.getElementById("notifyPm25").value = thresholds.pm25;
+          }
+        } catch (err) {
+          console.error("Failed to load current thresholds:", err);
+        }
+      }
+
+      async function submitNotificationValues() {
+        const email = document.getElementById("notifyEmail").value;
+        const hum = document.getElementById("notifyHum").value;
+        const temp = document.getElementById("notifyTemp").value;
+        const pm25 = document.getElementById("notifyPm25").value;
+        const messageEl = document.getElementById("notifMessage");
+
+        // Basic validation
+        const payload = {};
+        if (email !== undefined && email !== "") payload.email = email;
+        if (hum !== undefined && hum !== "") payload.humidity = Number(hum);
+        if (temp !== undefined && temp !== "")
+          payload.temperature = Number(temp);
+        if (pm25 !== undefined && pm25 !== "") payload.pm25 = Number(pm25);
+
+        if (Object.keys(payload).length === 0) {
+          messageEl.style.color = "#c62828";
+          messageEl.textContent = "Enter at least one value.";
+          return;
         }
 
-        function clearError() {
-            document.getElementById('errorContainer').innerHTML = '';
+        messageEl.style.color = "#333";
+        messageEl.textContent = "Sending...";
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/set-notification-values`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(`Server error: ${res.status} ${txt}`);
+          }
+
+          const data = await res.json();
+          messageEl.style.color = "#2e7d32";
+          messageEl.textContent =
+            data.message || "Notification thresholds updated.";
+
+          // clear after a short delay
+          setTimeout(() => {
+            messageEl.textContent = "";
+          }, 4000);
+        } catch (err) {
+          console.error("Failed to set notification values", err);
+          messageEl.style.color = "#c62828";
+          messageEl.textContent = err.message || "Failed to send values";
         }
+      }
 
-        // --- Notification threshold submission ---
-        async function loadCurrentThresholds() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/set-notification-values`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const thresholds = data.thresholds || {};
-                    
-                    // Populate inputs with current values
-                    if (thresholds.email) document.getElementById('notifyEmail').value = thresholds.email;
-                    if (thresholds.humidity !== undefined) document.getElementById('notifyHum').value = thresholds.humidity;
-                    if (thresholds.temperature !== undefined) document.getElementById('notifyTemp').value = thresholds.temperature;
-                    if (thresholds.pm25 !== undefined) document.getElementById('notifyPm25').value = thresholds.pm25;
-                }
-            } catch (err) {
-                console.error('Failed to load current thresholds:', err);
-            }
-        }
+      function initializeCharts() {
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                padding: 15,
+                usePointStyle: true,
+                font: {
+                  size: 11,
+                },
+              },
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              backgroundColor: "rgba(0,0,0,0.8)",
+              padding: 12,
+              titleFont: { size: 13 },
+              bodyFont: { size: 12 },
+            },
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false,
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+              },
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: "rgba(0,0,0,0.05)",
+              },
+            },
+          },
+        };
 
-        async function submitNotificationValues() {
-            const email = document.getElementById('notifyEmail').value;
-            const hum = document.getElementById('notifyHum').value;
-            const temp = document.getElementById('notifyTemp').value;
-            const pm25 = document.getElementById('notifyPm25').value;
-            const messageEl = document.getElementById('notifMessage');
-
-            // Basic validation
-            const payload = {};
-            if (email !== undefined && email !== '') payload.email = email;
-            if (hum !== undefined && hum !== '') payload.humidity = Number(hum);
-            if (temp !== undefined && temp !== '') payload.temperature = Number(temp);
-            if (pm25 !== undefined && pm25 !== '') payload.pm25 = Number(pm25);
-
-            if (Object.keys(payload).length === 0) {
-                messageEl.style.color = '#c62828';
-                messageEl.textContent = 'Enter at least one value.';
-                return;
-            }
-
-            messageEl.style.color = '#333';
-            messageEl.textContent = 'Sending...';
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/set-notification-values`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error(`Server error: ${res.status} ${txt}`);
-                }
-
-                const data = await res.json();
-                messageEl.style.color = '#2e7d32';
-                messageEl.textContent = data.message || 'Notification thresholds updated.';
-
-                // clear after a short delay
-                setTimeout(() => { messageEl.textContent = ''; }, 4000);
-            } catch (err) {
-                console.error('Failed to set notification values', err);
-                messageEl.style.color = '#c62828';
-                messageEl.textContent = err.message || 'Failed to send values';
-            }
-        }
-
-        function initializeCharts() {
-            const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            font: {
-                                size: 11
-                            }
-                        }
+        // PM2.5 Trend Chart
+        const pm25Ctx = document.getElementById("pm25Chart").getContext("2d");
+        pm25Chart = new Chart(pm25Ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "PM2.5 (μg/m³)",
+                data: [],
+                borderColor: "#667eea",
+                backgroundColor: "rgba(102, 126, 234, 0.1)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+              },
+            ],
+          },
+          options: {
+            ...commonOptions,
+            plugins: {
+              ...commonOptions.plugins,
+              annotation: {
+                annotations: {
+                  goodLine: {
+                    type: "line",
+                    yMin: 12,
+                    yMax: 12,
+                    borderColor: "#4caf50",
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                      content: "Good (12)",
+                      enabled: true,
+                      position: "end",
                     },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        padding: 12,
-                        titleFont: { size: 13 },
-                        bodyFont: { size: 12 }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
+                  },
+                  moderateLine: {
+                    type: "line",
+                    yMin: 35.4,
+                    yMax: 35.4,
+                    borderColor: "#ff9800",
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                      content: "Moderate (35.4)",
+                      enabled: true,
+                      position: "end",
                     },
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        }
-                    }
-                }
-            };
-
-            // PM2.5 Trend Chart
-            const pm25Ctx = document.getElementById('pm25Chart').getContext('2d');
-            pm25Chart = new Chart(pm25Ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'PM2.5 (μg/m³)',
-                        data: [],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
+                  },
                 },
-                options: {
-                    ...commonOptions,
-                    plugins: {
-                        ...commonOptions.plugins,
-                        annotation: {
-                            annotations: {
-                                goodLine: {
-                                    type: 'line',
-                                    yMin: 12,
-                                    yMax: 12,
-                                    borderColor: '#4caf50',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        content: 'Good (12)',
-                                        enabled: true,
-                                        position: 'end'
-                                    }
-                                },
-                                moderateLine: {
-                                    type: 'line',
-                                    yMin: 35.4,
-                                    yMax: 35.4,
-                                    borderColor: '#ff9800',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        content: 'Moderate (35.4)',
-                                        enabled: true,
-                                        position: 'end'
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Temperature & Humidity Chart
-            const tempHumidityCtx = document.getElementById('tempHumidityChart').getContext('2d');
-            tempHumidityChart = new Chart(tempHumidityCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Temperature (°C)',
-                            data: [],
-                            borderColor: '#f44336',
-                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y',
-                            pointRadius: 3
-                        },
-                        {
-                            label: 'Humidity (%)',
-                            data: [],
-                            borderColor: '#2196f3',
-                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y1',
-                            pointRadius: 3
-                        }
-                    ]
-                },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        x: commonOptions.scales.x,
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)'
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.05)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Humidity (%)'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            },
-                            min: 0,
-                            max: 100
-                        }
-                    }
-                }
-            });
-
-            // Air Quality Chart (PM1, PM2.5, PM10)
-            const airQualityCtx = document.getElementById('airQualityChart').getContext('2d');
-            airQualityChart = new Chart(airQualityCtx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'PM1',
-                            data: [],
-                            backgroundColor: 'rgba(76, 175, 80, 0.7)',
-                            borderColor: '#4caf50',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'PM2.5',
-                            data: [],
-                            backgroundColor: 'rgba(255, 152, 0, 0.7)',
-                            borderColor: '#ff9800',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'PM10',
-                            data: [],
-                            backgroundColor: 'rgba(244, 67, 54, 0.7)',
-                            borderColor: '#f44336',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        ...commonOptions.scales,
-                        y: {
-                            ...commonOptions.scales.y,
-                            title: {
-                                display: true,
-                                text: 'Concentration (μg/m³)'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Gas Concentrations Chart
-            const gasCtx = document.getElementById('gasChart').getContext('2d');
-            gasChart = new Chart(gasCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'CO₂ (ppm)',
-                            data: [],
-                            borderColor: '#9c27b0',
-                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y',
-                            pointRadius: 3
-                        },
-                        {
-                            label: 'TVOC (ppb)',
-                            data: [],
-                            borderColor: '#ff5722',
-                            backgroundColor: 'rgba(255, 87, 34, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            yAxisID: 'y1',
-                            pointRadius: 3
-                        },
-                        {
-                            label: 'HCHO (μg/m³)',
-                            data: [],
-                            borderColor: '#00bcd4',
-                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.4,
-                            yAxisID: 'y1',
-                            pointRadius: 3
-                        }
-                    ]
-                },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        x: commonOptions.scales.x,
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'CO₂ (ppm)'
-                            },
-                            grid: {
-                                color: 'rgba(0,0,0,0.05)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'TVOC/HCHO'
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateCharts(data) {
-            if (!data || data.length === 0) return;
-
-            // Sort by time
-            const sortedData = [...data].sort((a, b) => new Date(a.time) - new Date(b.time));
-            
-            // Take last 24 data points (or all if less than 24)
-            const recentData = sortedData.slice(-24);
-
-            // Prepare labels (timestamps)
-            const labels = recentData.map(d => {
-                const date = new Date(d.time);
-                return date.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false
-                });
-            });
-
-            // Update PM2.5 Chart
-            if (pm25Chart) {
-                pm25Chart.data.labels = labels;
-                pm25Chart.data.datasets[0].data = recentData.map(d => d.pm25 || 0);
-                pm25Chart.update('none');
-            }
-
-            // Update Temperature & Humidity Chart
-            if (tempHumidityChart) {
-                tempHumidityChart.data.labels = labels;
-                tempHumidityChart.data.datasets[0].data = recentData.map(d => d.t || 0);
-                tempHumidityChart.data.datasets[1].data = recentData.map(d => d.h || 0);
-                tempHumidityChart.update('none');
-            }
-
-            // Update Air Quality Chart (show last 10 readings for better visibility)
-            if (airQualityChart) {
-                const barData = recentData.slice(-10);
-                const barLabels = barData.map(d => {
-                    const date = new Date(d.time);
-                    return date.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: false
-                    });
-                });
-                airQualityChart.data.labels = barLabels;
-                airQualityChart.data.datasets[0].data = barData.map(d => d.pm1 || 0);
-                airQualityChart.data.datasets[1].data = barData.map(d => d.pm25 || 0);
-                airQualityChart.data.datasets[2].data = barData.map(d => d.pm10 || 0);
-                airQualityChart.update('none');
-            }
-
-            // Update Gas Chart
-            if (gasChart) {
-                gasChart.data.labels = labels;
-                gasChart.data.datasets[0].data = recentData.map(d => d.co2 || 0);
-                gasChart.data.datasets[1].data = recentData.map(d => d.tvoc || 0);
-                gasChart.data.datasets[2].data = recentData.map(d => d.hcho || 0);
-                gasChart.update('none');
-            }
-        }
-
-        async function refreshData() {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const sensorGrid = document.getElementById('sensorGrid');
-            
-            try {
-                clearError();
-                
-                const data = await fetchData();
-                
-                loadingIndicator.style.display = 'none';
-                
-                if (!data || data.length === 0) {
-                    sensorGrid.innerHTML = '<div class="error">No sensor data available</div>';
-                    return;
-                }
-
-                // Group data by MAC address and get the most recent reading for each sensor
-                const latestByMac = {};
-                data.forEach(entry => {
-                    if (!latestByMac[entry.mac] || new Date(entry.time) > new Date(latestByMac[entry.mac].time)) {
-                        latestByMac[entry.mac] = entry;
-                    }
-                });
-
-                const latestData = Object.values(latestByMac);
-                
-                // Render summary cards
-                renderSummaryCards(latestData);
-                
-                // Update charts with all historical data
-                updateCharts(data);
-                
-                // Render sensor cards
-                sensorGrid.innerHTML = latestData.map(sensor => renderSensorCard(sensor)).join('');
-                
-                // Update last update time
-                const lastUpdate = document.getElementById('lastUpdate');
-                lastUpdate.textContent = `Last updated: ${formatDate(new Date())}`;
-                
-            } catch (error) {
-                loadingIndicator.style.display = 'none';
-                showError(`Failed to fetch data: ${error.message}. Make sure the server is running on ${API_BASE_URL}`);
-            }
-        }
-
-        function startAutoRefresh() {
-            // Clear any existing interval
-            if (updateInterval) {
-                clearInterval(updateInterval);
-            }
-            
-            // Set up new interval
-            updateInterval = setInterval(refreshData, UPDATE_INTERVAL_MS);
-        }
-
-        // Initialize charts on page load
-        initializeCharts();
-        
-        // Load current notification thresholds
-        loadCurrentThresholds();
-        
-        // Initial load
-        refreshData();
-        
-        // Start auto-refresh
-        startAutoRefresh();
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (updateInterval) {
-                clearInterval(updateInterval);
-            }
+              },
+            },
+          },
         });
+
+        // Temperature & Humidity Chart
+        const tempHumidityCtx = document
+          .getElementById("tempHumidityChart")
+          .getContext("2d");
+        tempHumidityChart = new Chart(tempHumidityCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Temperature (°C)",
+                data: [],
+                borderColor: "#f44336",
+                backgroundColor: "rgba(244, 67, 54, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                yAxisID: "y",
+                pointRadius: 3,
+              },
+              {
+                label: "Humidity (%)",
+                data: [],
+                borderColor: "#2196f3",
+                backgroundColor: "rgba(33, 150, 243, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                yAxisID: "y1",
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              x: commonOptions.scales.x,
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: {
+                  display: true,
+                  text: "Temperature (°C)",
+                },
+                grid: {
+                  color: "rgba(0,0,0,0.05)",
+                },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                title: {
+                  display: true,
+                  text: "Humidity (%)",
+                },
+                grid: {
+                  drawOnChartArea: false,
+                },
+                min: 0,
+                max: 100,
+              },
+            },
+          },
+        });
+
+        // Air Quality Chart (PM1, PM2.5, PM10)
+        const airQualityCtx = document
+          .getElementById("airQualityChart")
+          .getContext("2d");
+        airQualityChart = new Chart(airQualityCtx, {
+          type: "bar",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "PM1",
+                data: [],
+                backgroundColor: "rgba(76, 175, 80, 0.7)",
+                borderColor: "#4caf50",
+                borderWidth: 1,
+              },
+              {
+                label: "PM2.5",
+                data: [],
+                backgroundColor: "rgba(255, 152, 0, 0.7)",
+                borderColor: "#ff9800",
+                borderWidth: 1,
+              },
+              {
+                label: "PM10",
+                data: [],
+                backgroundColor: "rgba(244, 67, 54, 0.7)",
+                borderColor: "#f44336",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              ...commonOptions.scales,
+              y: {
+                ...commonOptions.scales.y,
+                title: {
+                  display: true,
+                  text: "Concentration (μg/m³)",
+                },
+              },
+            },
+          },
+        });
+
+        // Gas Concentrations Chart
+        const gasCtx = document.getElementById("gasChart").getContext("2d");
+        gasChart = new Chart(gasCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "CO₂ (ppm)",
+                data: [],
+                borderColor: "#9c27b0",
+                backgroundColor: "rgba(156, 39, 176, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                yAxisID: "y",
+                pointRadius: 3,
+              },
+              {
+                label: "TVOC (ppb)",
+                data: [],
+                borderColor: "#ff5722",
+                backgroundColor: "rgba(255, 87, 34, 0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                yAxisID: "y1",
+                pointRadius: 3,
+              },
+              {
+                label: "HCHO (μg/m³)",
+                data: [],
+                borderColor: "#00bcd4",
+                backgroundColor: "rgba(0, 188, 212, 0.1)",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                yAxisID: "y1",
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              x: commonOptions.scales.x,
+              y: {
+                type: "linear",
+                display: true,
+                position: "left",
+                title: {
+                  display: true,
+                  text: "CO₂ (ppm)",
+                },
+                grid: {
+                  color: "rgba(0,0,0,0.05)",
+                },
+              },
+              y1: {
+                type: "linear",
+                display: true,
+                position: "right",
+                title: {
+                  display: true,
+                  text: "TVOC/HCHO",
+                },
+                grid: {
+                  drawOnChartArea: false,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function updateCharts(data) {
+        if (!data || data.length === 0) return;
+
+        // Sort by time
+        const sortedData = [...data].sort(
+          (a, b) => new Date(a.time) - new Date(b.time)
+        );
+
+        // Take last 24 data points (or all if less than 24)
+        const recentData = sortedData.slice(-24);
+
+        // Prepare labels (timestamps)
+        const labels = recentData.map((d) => {
+          const date = new Date(d.time);
+          return date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        });
+
+        // Update PM2.5 Chart
+        if (pm25Chart) {
+          pm25Chart.data.labels = labels;
+          pm25Chart.data.datasets[0].data = recentData.map((d) => d.pm25 || 0);
+          pm25Chart.update("none");
+        }
+
+        // Update Temperature & Humidity Chart
+        if (tempHumidityChart) {
+          tempHumidityChart.data.labels = labels;
+          tempHumidityChart.data.datasets[0].data = recentData.map(
+            (d) => d.t || 0
+          );
+          tempHumidityChart.data.datasets[1].data = recentData.map(
+            (d) => d.h || 0
+          );
+          tempHumidityChart.update("none");
+        }
+
+        // Update Air Quality Chart (show last 10 readings for better visibility)
+        if (airQualityChart) {
+          const barData = recentData.slice(-10);
+          const barLabels = barData.map((d) => {
+            const date = new Date(d.time);
+            return date.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            });
+          });
+          airQualityChart.data.labels = barLabels;
+          airQualityChart.data.datasets[0].data = barData.map(
+            (d) => d.pm1 || 0
+          );
+          airQualityChart.data.datasets[1].data = barData.map(
+            (d) => d.pm25 || 0
+          );
+          airQualityChart.data.datasets[2].data = barData.map(
+            (d) => d.pm10 || 0
+          );
+          airQualityChart.update("none");
+        }
+
+        // Update Gas Chart
+        if (gasChart) {
+          gasChart.data.labels = labels;
+          gasChart.data.datasets[0].data = recentData.map((d) => d.co2 || 0);
+          gasChart.data.datasets[1].data = recentData.map((d) => d.tvoc || 0);
+          gasChart.data.datasets[2].data = recentData.map((d) => d.hcho || 0);
+          gasChart.update("none");
+        }
+      }
+
+      async function refreshData() {
+        const loadingIndicator = document.getElementById("loadingIndicator");
+        const sensorGrid = document.getElementById("sensorGrid");
+
+        try {
+          clearError();
+
+          const data = await fetchData();
+
+          loadingIndicator.style.display = "none";
+
+          if (!data || data.length === 0) {
+            sensorGrid.innerHTML =
+              '<div class="error">No sensor data available</div>';
+            return;
+          }
+
+          // Group data by MAC address and get the most recent reading for each sensor
+          const latestByMac = {};
+          data.forEach((entry) => {
+            if (
+              !latestByMac[entry.mac] ||
+              new Date(entry.time) > new Date(latestByMac[entry.mac].time)
+            ) {
+              latestByMac[entry.mac] = entry;
+            }
+          });
+
+          const latestData = Object.values(latestByMac);
+
+          // Render summary cards
+          renderSummaryCards(latestData);
+
+          // Update charts with all historical data
+          updateCharts(data);
+
+          // Render sensor cards
+          sensorGrid.innerHTML = latestData
+            .map((sensor) => renderSensorCard(sensor))
+            .join("");
+
+          // Update last update time
+          const lastUpdate = document.getElementById("lastUpdate");
+          lastUpdate.textContent = `Last updated: ${formatDate(new Date())}`;
+        } catch (error) {
+          loadingIndicator.style.display = "none";
+          showError(
+            `Failed to fetch data: ${error.message}. Make sure the server is running on ${API_BASE_URL}`
+          );
+        }
+      }
+
+      function startAutoRefresh() {
+        // Clear any existing interval
+        if (updateInterval) {
+          clearInterval(updateInterval);
+        }
+
+        // Set up new interval
+        updateInterval = setInterval(refreshData, UPDATE_INTERVAL_MS);
+      }
+
+      // Initialize charts on page load
+      initializeCharts();
+
+      // Load current notification thresholds
+      loadCurrentThresholds();
+
+      // Initial load
+      refreshData();
+
+      // Start auto-refresh
+      startAutoRefresh();
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        if (updateInterval) {
+          clearInterval(updateInterval);
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
