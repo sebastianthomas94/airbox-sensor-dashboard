@@ -416,7 +416,26 @@
 
     <script>
         let updateInterval = null;
-        const API_BASE_URL = 'https://airbox-sensor-dashboard.onrender.com';
+        // Determine API base URL from current page location.
+        // If the page is served from localhost (or 127.0.0.1) and no port is present,
+        // assume the backend runs on port 5000. If the page is opened via file:// or
+        // window.location is unavailable, fall back to http://localhost:5000.
+        const API_BASE_URL = (() => {
+            try {
+                if (typeof window === 'undefined' || !window.location) return 'http://localhost:5000';
+                const { protocol, hostname, port } = window.location;
+
+                if (protocol === 'file:') return 'http://localhost:5000';
+
+                if ((hostname === 'localhost' || hostname === '127.0.0.1') && !port) {
+                    return `${protocol}//${hostname}:5000`;
+                }
+
+                return window.location.origin;
+            } catch (e) {
+                return 'http://localhost:5000';
+            }
+        })();
         const UPDATE_INTERVAL_MS = 60000; // 1 minute
 
         // Chart instances
